@@ -13,20 +13,28 @@ pub const Game = struct {
     currentWord: string,
 
     pub fn tick(self: *Game) void {
-        raylib.beginDrawing();
-        defer raylib.endDrawing();
-
         setVars(self) catch {
             std.log.warn("Umm this shouldn't happen\n", .{});
         };
+
+        raylib.beginDrawing();
         draw(self);
+        raylib.endDrawing();
     }
 
     fn setVars(self: *Game) !void {
         while (self.fullLabel.popOrNull() != null) continue;
 
-        const curKeyboardChar: u8 = @intCast(raylib.getCharPressed());
-        _ = curKeyboardChar;
+        const curKeyboardChar: u8 = char: {
+            for (65..91) |i| {
+                const key: raylib.KeyboardKey = @enumFromInt(i);
+                if (raylib.isKeyDown(key)) {
+                    break :char @intCast(i);
+                }
+            }
+            break :char undefined;
+        };
+
         self.counter += 1;
 
         if (self.counter % 100 < 50) {
@@ -35,7 +43,14 @@ pub const Game = struct {
             self.indicator = " ";
         }
 
-        try self.fullLabel.appendSlice(self.label ++ self.indicator ++ .{0}); //catch |err| std.debug.print("Error: {!}\n", .{err});
+        if (curKeyboardChar >= 65 and curKeyboardChar <= 90) {
+            try self.fullLabel.appendSlice(self.label);
+            try self.fullLabel.append(curKeyboardChar);
+            try self.fullLabel.appendSlice(self.indicator ++ .{0});
+        } else {
+            try self.fullLabel.appendSlice(self.label ++ self.indicator ++ .{0});
+        }
+
         return;
     }
 
@@ -45,7 +60,7 @@ pub const Game = struct {
         var thing: [50]u8 = undefined;
         var counter: usize = 0;
         for (self.fullLabel.items, 0..) |i, idx| {
-            if (i == undefined) break;
+            if (i == 0 or i == undefined) break;
             thing[idx] = i;
             counter += 1;
         }
