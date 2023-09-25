@@ -9,8 +9,8 @@ pub const Game = struct {
     indicator: *const [1]u8 = "_",
     allocator: std.mem.Allocator,
     historyList: [5]string,
-    fullLabel: string,
-    currentWord: string,
+    name: [9:0]u8 = undefined,
+    letterCount: usize = 0,
 
     pub fn tick(self: *Game) void {
         setVars(self) catch {
@@ -25,16 +25,6 @@ pub const Game = struct {
     fn setVars(self: *Game) !void {
         while (self.fullLabel.popOrNull() != null) continue;
 
-        const curKeyboardChar: u8 = char: {
-            for (65..91) |i| {
-                const key: raylib.KeyboardKey = @enumFromInt(i);
-                if (raylib.isKeyDown(key)) {
-                    break :char @intCast(i);
-                }
-            }
-            break :char undefined;
-        };
-
         self.counter += 1;
 
         if (self.counter % 100 < 50) {
@@ -43,12 +33,24 @@ pub const Game = struct {
             self.indicator = " ";
         }
 
-        if (curKeyboardChar >= 65 and curKeyboardChar <= 90) {
-            try self.fullLabel.appendSlice(self.label);
-            try self.fullLabel.append(curKeyboardChar);
-            try self.fullLabel.appendSlice(self.indicator ++ .{0});
-        } else {
-            try self.fullLabel.appendSlice(self.label ++ self.indicator ++ .{0});
+        raylib.setMouseCursor(@intFromEnum(raylib.MouseCursor.mouse_cursor_ibeam));
+        var key: u32 = @intCast(raylib.getCharPressed());
+        while (key > 0) {
+            if ((key >= 32) and (key <= 125) and (self.letterCount < self.name.len)) {
+                self.name[self.letterCount] = @intCast(key);
+                self.name[self.letterCount+1] = 0;
+                self.letterCount += 1;
+            }
+            key = @intCast(raylib.getCharPressed());
+        }
+        
+        if (raylib.isKeyPressed(.key_backspace) and self.letterCount != 0) {
+            self.letterCount -= 1;
+            self.name[self.letterCount] = 0;
+            
+            if (self.letterCount <= 0) {
+                self.letterCount = 0;
+            }
         }
 
         return;
@@ -66,7 +68,7 @@ pub const Game = struct {
         }
         thing[counter] = 0;
 
-        raylib.drawText(thing[0..counter :0], 190, 200, 20, raylib.Color.light_gray);
+        raylib.drawText(self.name[0..self.letterCount-1 :0], 190, 200, 20, raylib.Color.light_gray);
     }
 
     pub fn destroy(self: *Game) void {

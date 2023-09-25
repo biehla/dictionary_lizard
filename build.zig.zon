@@ -4,7 +4,7 @@
     .dependencies = .{
         .raylib = .{
             .url = "https://github.com/raysan5/raylib/archive/6094869e3e845e90e1e8ae41b98e889fb3e13e78.tar.gz",
-            .hash = "12203b7a16bcf8d7fe4c9990a46d92b6f2e35531a4b82eb3bdf8ba4a0dbcc5f21415",
+            .hash = "12201cf726c739d55108fdfc762cb76a35ec824417901aeaa4cdc71d01d6c9a92ec7",
         },
     },
 }
